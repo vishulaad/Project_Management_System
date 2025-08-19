@@ -9,7 +9,7 @@ export function ProjectProvider({ children }) {
   const [projects, setProjects] = useState([]);
   const { user } = useAuth();
 
-  const getProjects = async () => {
+  const getProject = async () => {
     try {
       const res = await API.get(`/projects/company/${user.companyId}`);
       setProjects(res.data);
@@ -87,12 +87,12 @@ export function ProjectProvider({ children }) {
   };
 
   useEffect(() => {
-    if (user) getProjects();
+    if (user) getProject();
   }, [user]);
 
   return (
     <ProjectContext.Provider
-      value={{ projects, createProject, updateProject, deleteProject }}>
+      value={{ projects, createProject, updateProject, deleteProject,getProject }}>
       {children}
     </ProjectContext.Provider>
   );
