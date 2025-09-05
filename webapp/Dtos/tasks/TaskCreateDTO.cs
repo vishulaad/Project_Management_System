@@ -17,21 +17,23 @@ namespace webapp.DTOs.Tasks
 
         public DateTime? DueDate { get; set; }
 
-        public TaskStatusEnum Status { get; set; } = TaskStatusEnum.NotStarted;
+        public TaskStatusEnum Status { get; set; } = TaskStatusEnum.Todo;
 
         public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
-        [Required]
         public int ProjectId { get; set; }
+       public Project Project { get; set; } = null!;
 
-        [Required]
-        public int CompanyId { get; set; }
+        public int? CompanyId { get; set; }
+        public Company Company { get; set; } = null!;
 
-        [Required]
-        public int CreatedById { get; set; }
+          public int CreatedById { get; set; }
+           public User CreatedBy { get; set; } = null!;
+
 
         // 🔥 Sprint ke sath link karne ke liye
         public int? SprintId { get; set; }
+         public int? EstimatedHours { get; set; }
 
         public List<SubtaskCreateDTO>? Subtasks { get; set; }
         public List<TaskAssigneeCreateDTO>? Assignees { get; set; }

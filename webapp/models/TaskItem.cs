@@ -7,8 +7,9 @@ namespace webapp.Models
 {
     public enum TaskStatus
     {
-        NotStarted,
+        Todo,
         InProgress,
+        InReview,
         Completed,
         Blocked
     }
@@ -17,7 +18,8 @@ namespace webapp.Models
     {
         Low,
         Medium,
-        High
+        High,
+        Critical
     }
 
     [Table("tasks")]
@@ -34,42 +36,52 @@ namespace webapp.Models
         [Column("description", TypeName = "text")]
         public string? Description { get; set; }
 
-        [Column("due_date")]
-        public DateTime? DueDate { get; set; }
-
         [Column("status")]
-        public TaskStatus Status { get; set; } = TaskStatus.NotStarted;
+        public TaskStatus Status { get; set; } = TaskStatus.Todo;
 
         [Column("priority")]
         public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
+        [Column("due_date")]
+        public DateTime? DueDate { get; set; }
+
+        [Column("estimated_hours")]
+        public decimal? EstimatedHours { get; set; }
+
+        [Column("actual_hours")]
+        public decimal? ActualHours { get; set; }
+
+        // Foreign Keys
         [ForeignKey("Project")]
         [Column("project_id")]
         public int ProjectId { get; set; }
 
-        [ForeignKey("Company")]
-        [Column("company_id")]
-        public int CompanyId { get; set; }
+        [ForeignKey("Sprint")]
+        [Column("sprint_id")]
+        public int? SprintId { get; set; }
+
+        [ForeignKey("Story")]
+        [Column("story_id")]
+        public int? StoryId { get; set; }
 
         [ForeignKey("CreatedBy")]
         [Column("created_by")]
         public int CreatedById { get; set; }
 
         [Column("created_at")]
-        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // 🔹 Sprint ke liye foreign key
-        [ForeignKey("Sprint")]
-        [Column("sprint_id")]
-        public int? SprintId { get; set; }   // Nullable: task backlog me bhi ho sakta hai
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // ✅ Navigation properties
+           public int? CompanyId { get; set; }
+    public Company? Company { get; set; }
+
+        // Navigation Properties
         public Project Project { get; set; } = null!;
-        public Company Company { get; set; } = null!;
-        public User CreatedBy { get; set; } = null!;
         public Sprint? Sprint { get; set; }
-
-        // ✅ Related collections
+        public Story? Story { get; set; }
+        public User CreatedBy { get; set; } = null!;
         public ICollection<TaskAssignee> Assignees { get; set; } = new List<TaskAssignee>();
         public ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();
     }

@@ -12,7 +12,7 @@ namespace webapp.DTOs.Tasks
         public string Status { get; set; } = null!;
         public string Priority { get; set; } = null!;
         public int ProjectId { get; set; }
-        public int CompanyId { get; set; }
+        public int? CompanyId { get; set; }
         public int CreatedById { get; set; }
         public DateTime? CreatedAt { get; set; }
 
@@ -29,6 +29,10 @@ namespace webapp.DTOs.Tasks
         
         public int? SprintId { get; set; }
         public string? SprintName { get; set; }
+
+      public decimal? EstimatedHours { get; set; }
+       public decimal? CompletedHours { get; set; }
+        public decimal? ActualHours { get; set; }
 
         public List<SubtaskReadDTO> Subtasks { get; set; } = new List<SubtaskReadDTO>();
         public List<TaskAssigneeReadDTO> Assignees { get; set; } = new List<TaskAssigneeReadDTO>();

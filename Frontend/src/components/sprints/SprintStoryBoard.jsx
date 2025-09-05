@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Users, Clock, AlertCircle, Edit, Trash2, BookOpen, Plus, Target, CheckCircle, Settings } from "lucide-react";
+import { ArrowLeft, Calendar, Users, Clock, AlertCircle, Edit, Trash2, BookOpen, Plus, Target, CheckCircle } from "lucide-react";
 import { useStories } from "../../contexts/StoryContext";
 import API from "../auth/api";
 
-const TaskCard = ({ task, onEdit, onDelete, onStatusChange, showStoryInfo = false }) => {
+const TaskCard = ({ task, onEdit, onDelete, onStatusChange }) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragStart = (e) => {
     setIsDragging(true);
     e.dataTransfer.setData("taskId", task.taskId.toString());
     e.dataTransfer.setData("currentStatus", task.status);
+    e.dataTransfer.setData("storyId", task.storyId?.toString() || "");
   };
 
   const handleDragEnd = () => {
@@ -43,12 +44,7 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, showStoryInfo = fals
       } ${isOverdue ? "border-red-300" : "border-gray-200"}`}
     >
       <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <h4 className="font-semibold text-gray-900 text-sm leading-tight">{task.title}</h4>
-          {showStoryInfo && task.storyTitle && (
-            <p className="text-xs text-blue-600 mt-1">Story: {task.storyTitle}</p>
-          )}
-        </div>
+        <h4 className="font-semibold text-gray-900 text-sm leading-tight">{task.title}</h4>
         <div className="flex gap-1 ml-2">
           <button
             onClick={(e) => {
@@ -71,9 +67,7 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, showStoryInfo = fals
         </div>
       </div>
 
-      {task.description && (
-        <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
-      )}
+      <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
 
       <div className="flex items-center justify-between mb-2">
         <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(task.priority)}`}>
@@ -97,13 +91,113 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, showStoryInfo = fals
           <span className="truncate max-w-16">{task.assignedTo || "Unassigned"}</span>
         </div>
       </div>
-      
-      {task.estimatedHours && (
-        <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          <span>{task.estimatedHours}h estimated</span>
+    </div>
+  );
+};
+
+const StoryCard = ({ story, onEdit, onDelete, onAddTask }) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Done":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "InProgress":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "InReview":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "Backlog":
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "High":
+      case "Critical":
+        return "text-red-600";
+      case "Medium":
+        return "text-yellow-600";
+      case "Low":
+        return "text-green-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  const completedTasks = story.tasks?.filter(task => task.status === "Completed").length || 0;
+  const totalTasks = story.tasks?.length || 0;
+  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900 mb-1">{story.title}</h3>
+          <p className="text-sm text-gray-600 mb-2 line-clamp-2">{story.description}</p>
+          {story.acceptanceCriteria && (
+            <p className="text-xs text-gray-500 mb-2">
+              <strong>AC:</strong> {story.acceptanceCriteria}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 ml-3">
+          <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(story.status)}`}>
+            {story.status}
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => onEdit(story)}
+              className="text-gray-400 hover:text-blue-600 transition-colors p-1"
+            >
+              <Edit className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => onDelete(story)}
+              className="text-gray-400 hover:text-red-600 transition-colors p-1"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
+        <div className="flex items-center gap-1">
+          <Target className="w-4 h-4" />
+          <span>{story.storyPoints} points</span>
+        </div>
+        <div className={`flex items-center gap-1 ${getPriorityColor(story.priority)}`}>
+          <AlertCircle className="w-4 h-4" />
+          <span>{story.priority}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <CheckCircle className="w-4 h-4" />
+          <span>{completedTasks}/{totalTasks} tasks</span>
+        </div>
+      </div>
+
+      {totalTasks > 0 && (
+        <div className="mb-3">
+          <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Progress</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
         </div>
       )}
+
+      <button
+        onClick={() => onAddTask(story)}
+        className="w-full bg-blue-50 text-blue-600 py-2 px-3 rounded text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+      >
+        <Plus className="w-4 h-4" />
+        Add Task
+      </button>
     </div>
   );
 };
@@ -167,13 +261,7 @@ const KanbanColumn = ({ title, tasks, status, onTaskDrop, onEdit, onDelete }) =>
 
       <div className="flex-1 p-4 space-y-3 min-h-96 overflow-y-auto">
         {tasks.map((task) => (
-          <TaskCard 
-            key={task.taskId} 
-            task={task} 
-            onEdit={onEdit} 
-            onDelete={onDelete}
-            showStoryInfo={true}
-          />
+          <TaskCard key={task.taskId} task={task} onEdit={onEdit} onDelete={onDelete} />
         ))}
 
         {tasks.length === 0 && (
@@ -189,7 +277,7 @@ const KanbanColumn = ({ title, tasks, status, onTaskDrop, onEdit, onDelete }) =>
   );
 };
 
-export function SprintKanbanBoard() {
+export function SprintStoryBoard() {
   const { id: sprintId } = useParams();
   const navigate = useNavigate();
   const { getStoriesBySprint } = useStories();
@@ -219,15 +307,10 @@ export function SprintKanbanBoard() {
           const storiesData = await getStoriesBySprint(parseInt(sprintId));
           setStories(storiesData);
 
-          // Extract all tasks from stories and add story title info
+          // Extract all tasks from stories
           const allTasks = storiesData.reduce((acc, story) => {
             if (story.tasks) {
-              const tasksWithStoryInfo = story.tasks.map(task => ({
-                ...task,
-                storyTitle: story.title,
-                storyId: story.storyId
-              }));
-              return [...acc, ...tasksWithStoryInfo];
+              return [...acc, ...story.tasks];
             }
             return acc;
           }, []);
@@ -306,16 +389,40 @@ export function SprintKanbanBoard() {
     }
   };
 
+  const handleEditStory = (story) => {
+    console.log("Edit story:", story);
+    alert("Edit story functionality coming soon!");
+  };
+
+  const handleDeleteStory = async (story) => {
+    if (window.confirm(`Are you sure you want to delete story "${story.title}"?`)) {
+      try {
+        const token = localStorage.getItem("token");
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        
+        await API.delete(`/stories/${story.storyId}`, config);
+        
+        // Remove story and its tasks from state
+        setStories(prev => prev.filter(s => s.storyId !== story.storyId));
+        setTasks(prev => prev.filter(t => t.storyId !== story.storyId));
+      } catch (error) {
+        console.error("Error deleting story:", error);
+        alert("Failed to delete story");
+      }
+    }
+  };
+
+  const handleAddTask = (story) => {
+    console.log("Add task to story:", story);
+    alert("Add task functionality coming soon!");
+  };
+
   const handleBackToProject = () => {
     if (sprint?.projectId) {
       navigate(`/project/${sprint.projectId}`);
     } else {
       navigate("/projects");
     }
-  };
-
-  const handleViewStories = () => {
-    navigate(`/sprint-stories/${sprintId}`);
   };
 
   const calculateProgress = () => {
@@ -380,13 +487,6 @@ export function SprintKanbanBoard() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleViewStories}
-              className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium hover:bg-blue-200 transition-colors flex items-center gap-2"
-            >
-              <BookOpen className="w-4 h-4" />
-              View Stories
-            </button>
             <div className="text-right">
               <p className="text-sm text-gray-600">Progress</p>
               <p className="text-lg font-bold text-blue-900">{Math.round(calculateProgress())}%</p>
@@ -428,7 +528,7 @@ export function SprintKanbanBoard() {
           <div className="bg-purple-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-1">
               <Target className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium text-purple-800">Total Tasks</span>
+              <span className="text-sm font-medium text-purple-800">Tasks</span>
             </div>
             <p className="text-purple-900 font-semibold">{tasks.length}</p>
           </div>
@@ -459,22 +559,42 @@ export function SprintKanbanBoard() {
         </div>
       </div>
 
-      {/* Kanban Board */}
       <div className="px-6 pb-6">
-        {tasks.length === 0 ? (
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200/80 p-12 text-center">
-            <Target className="w-16 h-16 text-blue-300 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-blue-900 mb-2">No Tasks Yet</h3>
-            <p className="text-blue-700 mb-6">This sprint doesn't have any tasks yet. Add some stories with tasks to get started.</p>
-            <button
-              onClick={handleViewStories}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
-            >
-              <BookOpen className="w-4 h-4" />
-              View Sprint Stories
-            </button>
-          </div>
-        ) : (
+        {/* Stories Section */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-blue-950 mb-4 flex items-center gap-2">
+            <BookOpen className="w-5 h-5" />
+            User Stories ({stories.length})
+          </h2>
+          
+          {stories.length === 0 ? (
+            <div className="bg-white/80 backdrop-blur-xl rounded-lg p-8 text-center">
+              <BookOpen className="w-16 h-16 text-blue-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-blue-900 mb-2">No Stories Yet</h3>
+              <p className="text-blue-700">This sprint doesn't have any user stories yet.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {stories.map((story) => (
+                <StoryCard
+                  key={story.storyId}
+                  story={story}
+                  onEdit={handleEditStory}
+                  onDelete={handleDeleteStory}
+                  onAddTask={handleAddTask}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Task Kanban Board */}
+        <div>
+          <h2 className="text-xl font-bold text-blue-950 mb-4 flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            Task Board ({tasks.length} tasks)
+          </h2>
+          
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {Object.entries(tasksByStatus).map(([status, tasks]) => (
               <KanbanColumn
@@ -488,7 +608,7 @@ export function SprintKanbanBoard() {
               />
             ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

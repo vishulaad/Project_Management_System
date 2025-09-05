@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using webapp.Data;
 
@@ -11,9 +12,11 @@ using webapp.Data;
 namespace webapp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250904120612_RemoveActualHoursFromSprint")]
+    partial class RemoveActualHoursFromSprint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,7 +55,7 @@ namespace webapp.Migrations
 
                     b.HasKey("CompanyId");
 
-                    b.ToTable("companies", (string)null);
+                    b.ToTable("companies");
                 });
 
             modelBuilder.Entity("webapp.Models.Department", b =>
@@ -82,7 +85,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("departments", (string)null);
+                    b.ToTable("departments");
                 });
 
             modelBuilder.Entity("webapp.Models.LeaveRequest", b =>
@@ -149,7 +152,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("UserId1");
 
-                    b.ToTable("leave_requests", (string)null);
+                    b.ToTable("leave_requests");
                 });
 
             modelBuilder.Entity("webapp.Models.Project", b =>
@@ -206,7 +209,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("projects", (string)null);
+                    b.ToTable("projects");
                 });
 
             modelBuilder.Entity("webapp.Models.ProjectTeamMember", b =>
@@ -241,7 +244,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("project_team_members", (string)null);
+                    b.ToTable("project_team_members");
                 });
 
             modelBuilder.Entity("webapp.Models.Sprint", b =>
@@ -299,7 +302,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("sprints", (string)null);
+                    b.ToTable("sprints");
                 });
 
             modelBuilder.Entity("webapp.Models.Story", b =>
@@ -364,7 +367,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("SprintId");
 
-                    b.ToTable("stories", (string)null);
+                    b.ToTable("stories");
                 });
 
             modelBuilder.Entity("webapp.Models.Subtask", b =>
@@ -401,7 +404,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("subtasks", (string)null);
+                    b.ToTable("subtasks");
                 });
 
             modelBuilder.Entity("webapp.Models.Task", b =>
@@ -483,7 +486,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("StoryId");
 
-                    b.ToTable("tasks", (string)null);
+                    b.ToTable("tasks");
                 });
 
             modelBuilder.Entity("webapp.Models.TaskAssignee", b =>
@@ -521,7 +524,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("task_assignees", (string)null);
+                    b.ToTable("task_assignees");
                 });
 
             modelBuilder.Entity("webapp.Models.User", b =>
@@ -613,7 +616,7 @@ namespace webapp.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.ToTable("users", (string)null);
+                    b.ToTable("users");
                 });
 
             modelBuilder.Entity("webapp.Models.Department", b =>

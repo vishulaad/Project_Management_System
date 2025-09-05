@@ -335,6 +335,7 @@ D:\Project_Management_System-main\webapp\obj\Debug\net8.0\webapp.csproj.CoreComp
 D:\Project_Management_System-main\webapp\obj\Debug\net8.0\webapp.MvcApplicationPartsAssemblyInfo.cache
 D:\Project_Management_System-main\webapp\obj\Debug\net8.0\webapp.RazorAssemblyInfo.cache
 D:\Project_Management_System-main\webapp\obj\Debug\net8.0\webapp.RazorAssemblyInfo.cs
+D:\Project_Management_System-main\webapp\obj\Debug\net8.0\webapp.sourcelink.json
 D:\Project_Management_System-main\webapp\obj\Debug\net8.0\rjimswa.dswa.cache.json
 D:\Project_Management_System-main\webapp\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
 D:\Project_Management_System-main\webapp\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json

@@ -97,5 +97,7 @@ namespace webapp.Models
 
         public ICollection<Project> CreatedProjects { get; set; } = new List<Project>();
         public ICollection<ProjectTeamMember> ProjectTeamMemberships { get; set; } = new List<ProjectTeamMember>();
+
+        
     }
 }

@@ -1,11 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Calendar, ArrowLeft, ListChecks, Edit, Trash2, Plus, Users, Clock } from "lucide-react";
+import { Calendar, ArrowLeft, ListChecks, Edit, Trash2, Plus, Users, Clock, BookOpen, Target } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProjects } from "../../contexts/ProjectContext";
-import API from "../auth/api"; // Use your existing API instance
+import { useStories } from "../../contexts/StoryContext";
+import API from "../auth/api";
 
 const SprintCard = ({ sprint, onView, onEdit, onDelete, role }) => {
+  const [storyCount, setStoryCount] = useState(0);
+  const { getStoriesBySprint } = useStories();
+
+  useEffect(() => {
+    const fetchStoryCount = async () => {
+      try {
+        const stories = await getStoriesBySprint(sprint.sprintId);
+        setStoryCount(stories.length);
+      } catch (error) {
+        console.error("Error fetching story count:", error);
+        setStoryCount(0);
+      }
+    };
+
+    if (sprint.sprintId) {
+      fetchStoryCount();
+    }
+  }, [sprint.sprintId, getStoriesBySprint]);
+
   const getStatusColor = (status) => {
     switch (status) {
       case "Active":
@@ -21,6 +41,7 @@ const SprintCard = ({ sprint, onView, onEdit, onDelete, role }) => {
   };
 
   const progress = sprint.taskCount > 0 ? (sprint.completedTasks / sprint.taskCount) * 100 : 0;
+  
   const getDaysRemaining = () => {
     const endDate = new Date(sprint.endDate);
     const today = new Date();
@@ -29,10 +50,15 @@ const SprintCard = ({ sprint, onView, onEdit, onDelete, role }) => {
     return Math.max(0, diffDays);
   };
 
+  const getStoryPointsTotal = () => {
+    // This could be fetched from the stories, but for now we'll show story count
+    return storyCount;
+  };
+
   return (
     <div className="bg-white/70 border border-slate-200 rounded-lg p-5 shadow-sm hover:shadow-md transition animate-fadeSlideUp">
       <div className="flex items-start justify-between mb-3">
-        <div>
+        <div className="flex-1">
           <h3 className="font-bold text-lg text-blue-900">{sprint.name}</h3>
           <p className="text-sm text-blue-700 mt-1">{sprint.description || "No description"}</p>
         </div>
@@ -65,22 +91,52 @@ const SprintCard = ({ sprint, onView, onEdit, onDelete, role }) => {
         </div>
       </div>
 
+      {/* Sprint Metrics */}
       <div className="grid grid-cols-2 gap-4 text-sm text-blue-700 mb-4">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4" />
-          <span>{new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()}</span>
+          <div>
+            <div className="font-medium">Duration</div>
+            <div className="text-xs">
+              {new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()}
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4" />
-          <span>{getDaysRemaining()} days remaining</span>
+          <div>
+            <div className="font-medium">{getDaysRemaining()} days left</div>
+            <div className="text-xs text-blue-600">
+              {getDaysRemaining() <= 5 && getDaysRemaining() > 0 ? "Ending soon!" : ""}
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Stories and Tasks Count */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-blue-50 rounded-lg p-3 text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <BookOpen className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-800">Stories</span>
+          </div>
+          <div className="text-lg font-bold text-blue-900">{storyCount}</div>
+        </div>
+        <div className="bg-green-50 rounded-lg p-3 text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <Target className="w-4 h-4 text-green-600" />
+            <span className="text-sm font-medium text-green-800">Tasks</span>
+          </div>
+          <div className="text-lg font-bold text-green-900">{sprint.taskCount || 0}</div>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
       {sprint.taskCount > 0 && (
         <div className="mb-4">
           <div className="flex justify-between text-sm text-gray-600 mb-1">
             <span>Progress</span>
-            <span>{sprint.completedTasks}/{sprint.taskCount} tasks</span>
+            <span>{sprint.completedTasks || 0}/{sprint.taskCount} tasks</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -276,7 +332,7 @@ export default function ProjectView() {
         
         setProject(projectData);
 
-        // Fetch sprints for this project using correct API endpoint
+        // Fetch sprints for this project
         const sprintsResponse = await API.get(`/sprint/project/${id}`, config);
         setSprints(sprintsResponse.data || []);
 
@@ -296,7 +352,7 @@ export default function ProjectView() {
   }, [id, navigate, getProjectById]);
 
   const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this project?")) {
+    if (window.confirm("Are you sure you want to delete this project? This will also delete all associated sprints and stories.")) {
       try {
         await deleteProjectInState(parseInt(id));
         navigate("/projects");
@@ -317,7 +373,7 @@ export default function ProjectView() {
   };
 
   const handleDeleteSprint = async (sprint) => {
-    if (window.confirm(`Are you sure you want to delete sprint "${sprint.name}"?`)) {
+    if (window.confirm(`Are you sure you want to delete sprint "${sprint.name}"? This will also delete all associated stories and tasks.`)) {
       try {
         const token = localStorage.getItem("token");
         const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -450,7 +506,7 @@ export default function ProjectView() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <ListChecks className="w-5 h-5 text-blue-600" />
-            <h2 className="text-2xl font-bold text-blue-950">Project Sprints</h2>
+            <h2 className="text-2xl font-bold text-blue-950">Project Sprints ({sprints.length})</h2>
           </div>
           {role !== "employee" && (
             <button
@@ -464,21 +520,26 @@ export default function ProjectView() {
         </div>
 
         {sprints.length === 0 ? (
-          <div className="text-center py-8">
-            <Calendar className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-blue-400" />
+            </div>
             <h3 className="text-lg font-medium text-blue-950 mb-2">No Sprints Yet</h3>
-            <p className="text-blue-700 mb-4">This project doesn't have any sprints yet.</p>
+            <p className="text-blue-700 mb-6 max-w-md mx-auto">
+              This project doesn't have any sprints yet. Create your first sprint to start organizing user stories and tasks.
+            </p>
             {role !== "employee" && (
               <button
                 onClick={handleCreateSprint}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
               >
+                <Plus className="w-4 h-4" />
                 Create First Sprint
               </button>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {sprints.map((sprint, index) => (
               <div
                 key={sprint.sprintId}

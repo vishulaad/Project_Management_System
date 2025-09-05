@@ -71,6 +71,7 @@ builder.Services.AddScoped<JwtService>();
 //  Register SprintService after builder is defined
 builder.Services.AddScoped<ISprintService, SprintService>();
 
+builder.Services.AddScoped<IStoryService, StoryService>();
 // --------------------------
 //  Build App
 // --------------------------

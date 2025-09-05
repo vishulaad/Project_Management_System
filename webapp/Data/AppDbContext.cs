@@ -23,6 +23,8 @@ namespace webapp.Data
         public DbSet<Subtask> Subtasks { get; set; } = null!;
         public DbSet<ProjectTeamMember> ProjectTeamMembers { get; set; } = null!;
         public DbSet<Sprint> Sprints { get; set; } = null!;
+        
+         public DbSet<Story> Stories { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -117,6 +119,8 @@ namespace webapp.Data
                 .WithMany(s => s.Tasks)
                 .HasForeignKey(t => t.SprintId)
                 .IsRequired(false);
+
+
         }
     }
 }
